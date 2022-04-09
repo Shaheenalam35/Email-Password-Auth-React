@@ -9,6 +9,8 @@ const auth = getAuth(app);
 function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [validated, setValidated] = useState(false);
+  const [error, setError] = useState("");
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
   };
@@ -16,6 +18,25 @@ function App() {
     setPassword(event.target.value);
   };
   const handleFormSubmit = (event) => {
+    const form = event.currentTarget;
+    event.preventDefault();
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      return;
+    }
+    if (
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/.test(
+        password
+      )
+    ) {
+      setError("Password should be strong");
+      return;
+    }
+    setValidated(true);
+    setError("");
+
     createUserWithEmailAndPassword(auth, email, password)
       .then((result) => {
         // Signed in
@@ -26,24 +47,26 @@ function App() {
       .catch((error) => {
         console.error(error);
       });
-
-    event.preventDefault();
   };
   return (
     <div>
       <div className="registration w-50 mx-auto mt-2">
         <h2>Please Register !</h2>
-        <Form onSubmit={handleFormSubmit}>
+        <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
             <Form.Control
               onBlur={handleEmailBlur}
               type="email"
               placeholder="Enter email"
+              required
             />
             <Form.Text className="text-muted">
               We'll never share your email with anyone else.
             </Form.Text>
+            <Form.Control.Feedback type="invalid">
+              Please provide a valid Email.
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3" controlId="formBasicPassword">
@@ -52,8 +75,13 @@ function App() {
               onBlur={handlePasswordBlur}
               type="password"
               placeholder="Password"
+              required
             />
+            <Form.Control.Feedback type="invalid">
+              Please provide a valid Password.
+            </Form.Control.Feedback>
           </Form.Group>
+          <p className="text-danger">{error} </p>
 
           <Button variant="primary" type="submit">
             Submit
